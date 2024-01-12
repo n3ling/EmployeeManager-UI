@@ -11,5 +11,7 @@ An employee management system will be created which contains employee accounts. 
 
 ### Technologies
 -Frontend: Javascript (React, Bootstrap)
+
 -Backend: Python (Django)
+
 -Database: MySQL, hosted via https://planetscale.com/pricing, or https://filess.io/#DBMS as a backup if planetscale isn't viable.
