@@ -26,6 +26,9 @@ This web app will also handle employee work hours. Employees can clock-in for wo
 #### Payment Calculations
 The tool will also automatically calculate employee pay through the logged work hours and stored salary information. Management roles can also add bonus payments or deduct payments through this app. However, this app will not actually distribute the pay.
 
+#### Shift Scheduling
+The web app has a scheduling system which tracks shifts and their time & availability. All users are able to view all shifts. Management roles can add and edit shifts while non management employees can sign up for available shifts.
+
 ## Technologies
 
 ### Front-end 
