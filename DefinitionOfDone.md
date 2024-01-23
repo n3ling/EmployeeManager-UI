@@ -1,0 +1,4 @@
+- Satisfied acceptance criteria
+- Passed all tests
+- Peer reviewed
+- Merged to main
