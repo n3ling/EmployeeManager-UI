@@ -1,11 +1,11 @@
 # Definition of Done
 This document lists the criteria that any user story from the Product Backlog must meet to be considered done.
 ### A feature of a completed user story has to:
-1. Satisfy the acceptance criteria
-2. Peer reviewed by development team members
-3. Follow the coding practices described in the Working Agreement
-4. Have unit tests implemented
-5. Pass all the units tests
-6. Merged to main
-7. Pass integration tests
-8. Proper documentation
+1. Code passes all acceptance criteria
+2. Follows the coding practices described in the Working Agreement
+3. Unit tests are implemented
+4. Code passes unit tests
+5. Pull request is reviewed and approved
+6. Branch is merged to main
+8. Code passes all integration tests
+9. Documentation is updated
