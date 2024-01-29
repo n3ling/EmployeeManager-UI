@@ -45,7 +45,7 @@ As a team we agree to:
 ### Python
 * All functions and classes must have a docstring
 * 4 spaces for all indentations
-* Separate all classes and functions with 2 blank lines
+* Separate all classes and functions with 2 blank lines (1 blank line for functions within the same class)
 * Utilize snake case for all naming unless specified (this_is_snake_case)
 * Classes must be CapWords conventions (MyClass)
 * Never use single character variable names (unless for iterations)
