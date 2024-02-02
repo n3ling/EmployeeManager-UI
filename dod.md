@@ -7,5 +7,6 @@ This document lists the criteria that any user story from the Product Backlog mu
 4. Code passes unit tests
 5. Pull request is reviewed and approved
 6. Branch is merged to main
-8. Code passes all integration tests
-9. Documentation is updated
+7. Code passes all integration tests
+8. Documentation is updated
+9. Features and fixes are deployed to the server
