@@ -42,11 +42,11 @@ As a team we agree to:
 
 ## Coding Guidelines
 ***Tentative until the final tech stack has been determined***
-### Python
-* All functions and classes must have a docstring
+### JavaScript
+* All functions and classes must have an explanatory comment
 * 4 spaces for all indentations
 * Separate all classes and functions with 2 blank lines (1 blank line for functions within the same class)
-* Utilize snake case for all naming unless specified (this_is_snake_case)
+* Utilize camel case for all naming unless specified (camelCase)
 * Classes must be CapWords conventions (MyClass)
 * Never use single character variable names (unless for iterations)
 * Max line length is 80 characters
