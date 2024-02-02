@@ -35,7 +35,7 @@ The web app has a scheduling system which tracks shifts and their time & availab
 For performance and modularity React will be the main JavaScript library for building the interface. It will be used in conjunction with Bootstrap to ensure the web app is responsive and has consistent styling.
 
 ### Back-End
-The app will use a Django framework. [Vercel](https://vercel.com/) will be considered for hosting the frontend since it has good integration with React. [Netlify](https://www.netlify.com/) will also be considered if Vercel does not work out.
+The app will use a NodeJS/Express framework. [Vercel](https://vercel.com/) will be considered for hosting the frontend since it has good integration with React. [Netlify](https://www.netlify.com/) will also be considered if Vercel does not work out.
 
 ### Database 
 This web app will take advantage of relational databases since a lot of this information is structure and there are relationships between the data. Scalability was also an important consideration. Hosting will be chosen between [PlanetScale](https://planetscale.com/) or [Filess](https://filess.io/).
