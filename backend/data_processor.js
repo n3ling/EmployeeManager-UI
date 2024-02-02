@@ -19,7 +19,9 @@ var sequelize = new Sequelize(
             acquire: 30000
           },
         dialectOptions: {
-            ssl: process.env.MYSQL_ATTR_SSL_CA
+            ssl: {
+                'rejectUnauthorized': 'false' // need SSL cert if true
+            }
         }
       
     }
