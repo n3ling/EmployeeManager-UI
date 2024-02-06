@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const Sequelize = require('sequelize');
 
-var sequelize = new Sequelize(
+const sequelize = new Sequelize(
     process.env.DB_NAME, 
     process.env.DB_USER, 
     process.env.DB_PASSWORD, 
@@ -40,15 +40,15 @@ var Employee = sequelize.define('Employee', {
         primaryKey: true,
         autoIncrement: true
     },
-    firstName: Sequelize.STRING,
-    lastName: Sequelize.STRING,
+    givenName: Sequelize.STRING,
+    surname: Sequelize.STRING,
     email: Sequelize.STRING,
-    SSN: Sequelize.STRING,
+    password: Sequelize.STRING,
+    SIN: Sequelize.STRING,
     addressStreet: Sequelize.STRING,
     addressCity: Sequelize.STRING,
     addressState: Sequelize.STRING,
     addressPostal: Sequelize.STRING,
-    maritalStatus: Sequelize.STRING,
     isManager: Sequelize.BOOLEAN,
     employeeManagerNum: Sequelize.INTEGER,
     status: Sequelize.STRING,
@@ -61,12 +61,6 @@ var Employee = sequelize.define('Employee', {
 //populates the employees and departments arrays from json files
 exports.initialize = function initialize() {
     return new Promise ((resolve, reject) => {
-        // return new Promise (()=>{
-        //     const mysql = require('mysql2');
-        //     const connection = mysql.createConnection(process.env.DATABASE_URL);
-        //     console.log('Connected to PlanetScale!');
-        //     //connection.end()
-        // })        
         sequelize.sync()
         .then(()=>{
             console.log("Sync successful.");

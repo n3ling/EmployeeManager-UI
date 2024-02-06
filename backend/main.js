@@ -74,5 +74,3 @@ dataProcessor.initialize()
     console.log(errMsg);
     res.status(500).send("Unable to sync with the database");
 });
-
-//app.listen(HTTP_PORT, onHttpStart);
