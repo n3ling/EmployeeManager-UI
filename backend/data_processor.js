@@ -20,7 +20,8 @@ const sequelize = new Sequelize(
           },
         dialectOptions: {
             ssl: {
-                'rejectUnauthorized': 'false' // need SSL cert if true
+                require: true,
+                rejectUnauthorized: false // need SSL cert if true
             }
         }
       
