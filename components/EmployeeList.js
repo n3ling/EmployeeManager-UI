@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Accordion, Button, Card, Form, Modal } from 'react-bootstrap';
+import { Accordion, Button, Form, Modal } from 'react-bootstrap';
 import { deleteEmployee, addEmployee, updateEmployee } from '@/lib/employeeData';
 import { useRouter } from 'next/router';
 
@@ -7,10 +7,27 @@ export default function EmployeeList(){
     const router = useRouter();
     const [show, setShow] = useState(false);
     const [employees, setEmployees] = useState([]);
-    const [selectedEmployee, setSelectedEmployee] = useState(null);
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);  
     const [employee, setEmployee] = useState({
+      employeeID: '',
+      givenName: '',
+      surname: '',
+      email: '',
+      password: '',
+      SIN: '',
+      addrStreet: '',
+      addrCity: '',
+      addrProv: '',
+      addrPostal: '',
+      isManager: 0,
+      empManagerID: null,
+      status: 'Active',
+      department: '',
+      hireDate: '',
+    });
+
+    const [selectedEmployee, setSelectedEmployee] = useState({
       employeeID: '',
       givenName: '',
       surname: '',
@@ -38,6 +55,11 @@ export default function EmployeeList(){
     const handleChange = (e) => {
       const { name, value } = e.target;
       setEmployee({ ...employee, [name]: value });
+    };
+
+    const handleChangeUpdate = (e) => {
+      const { name, value } = e.target;
+      setSelectedEmployee({ ...selectedEmployee, [name]: value });
     };
 
     async function handleSubmit(e){
@@ -313,7 +335,7 @@ export default function EmployeeList(){
                   </div>
                   <div className="col-md-auto">
                     <Button variant="danger" onClick={() => handleDelete(employee.employeeID)}>Delete</Button>
-                    <Button variant="success" onClick={() => handleSelectEmployeeForUpdate(employee)}>Update</Button>
+                    <Button variant="success" onClick={() => handleSelectEmployeeForUpdate(employee)}>Select</Button>
                   </div>
                 </div>
               </Accordion.Header>
@@ -328,7 +350,7 @@ export default function EmployeeList(){
                         placeholder="Enter ID"
                         name="employeeID"
                         defaultValue={employee.employeeID}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -344,7 +366,7 @@ export default function EmployeeList(){
                         placeholder="Enter given name"
                         name="givenName"
                         defaultValue={employee.givenName}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -357,7 +379,7 @@ export default function EmployeeList(){
                         placeholder="Enter surname"
                         name="surname"
                         defaultValue={employee.surname}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -373,7 +395,7 @@ export default function EmployeeList(){
                         placeholder="Enter email"
                         name="email"
                         defaultValue={employee.email}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -386,7 +408,7 @@ export default function EmployeeList(){
                         placeholder="Enter password"
                         name="password"
                         defaultValue={employee.password}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -402,7 +424,7 @@ export default function EmployeeList(){
                         placeholder="Enter SIN"
                         name="SIN"
                         defaultValue={employee.SIN}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -418,7 +440,7 @@ export default function EmployeeList(){
                         placeholder="Enter address street"
                         name="addrStreet"
                         defaultValue={employee.addrStreet}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -431,7 +453,7 @@ export default function EmployeeList(){
                         placeholder="Enter address city"
                         name="addrCity"
                         defaultValue={employee.addrCity}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -444,7 +466,7 @@ export default function EmployeeList(){
                         placeholder="Enter address province"
                         name="addrProv"
                         defaultValue={employee.addrProv}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -460,7 +482,7 @@ export default function EmployeeList(){
                         placeholder="Enter address postal"
                         name="addrPostal"
                         defaultValue={employee.addrPostal}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -475,7 +497,7 @@ export default function EmployeeList(){
                         as="select"
                         name="isManager"
                         defaultValue={employee.isManager}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       >
                         <option value={0}>No</option>
@@ -490,7 +512,7 @@ export default function EmployeeList(){
                         as="select"
                         name="status"
                         defaultValue={employee.status}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       >
                         <option value="Active">Active</option>
@@ -506,7 +528,7 @@ export default function EmployeeList(){
                         placeholder="Enter department"
                         name="department"
                         defaultValue={employee.department}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
@@ -522,7 +544,7 @@ export default function EmployeeList(){
                         placeholder="Enter hire date"
                         name="hireDate"
                         defaultValue={employee.hireDate}
-                        onChange={handleChange}
+                        onChange={handleChangeUpdate}
                         required
                       />
                     </Form.Group>
