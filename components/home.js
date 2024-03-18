@@ -6,16 +6,15 @@ import { useState, useEffect } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
-
 export default function Hello() {
-  const [post, setPost] = useState();
+  const [empData, setEmptData] = useState();
   const [show, setShow] = useState(false);
 
   useEffect(() => {
     fetch(`/employees`)
       .then(res => res.json())
       .then(data => {
-        setPost(data[0]);
+        setEmptData(data[0]);
       });
   }, []);
 
@@ -36,9 +35,9 @@ export default function Hello() {
           <Modal.Title>Modal heading</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-        <p>ID: {post?.employeeID}</p>
-        <p>First Name: {post?.givenName}</p>
-        <p>Email: {post?.email}</p>
+        <p>ID: {empData?.employeeID}</p>
+        <p>First Name: {empData?.givenName}</p>
+        <p>Email: {empData?.email}</p>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
