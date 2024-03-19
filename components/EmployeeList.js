@@ -64,21 +64,33 @@ export default function EmployeeList(){
 
     async function handleSubmit(e){
       e.preventDefault();
-      addEmployee(employee);
-      setShowUpdate(false);
-      router.push('/employee/list')
+      e.stopPropagation();
+      try{
+        await addEmployee(employee);
+        window.location.reload(false);
+      } catch{
+        console.error('Error deleting employee:', error);
+      }
     };
 
-    const handleDelete = (id) => {
-      deleteEmployee(id);
-      router.push('/employee/list')
+    async function handleDelete(event, id){
+      event.stopPropagation();
+      try{
+        await deleteEmployee(id);
+        window.location.reload(false);
+      } catch{
+        console.error('Error deleting employee:', error);
+      }
     };
 
     async function handleUpdate(e){
       e.preventDefault();
-      updateEmployee(selectedEmployee);
-      console.log(selectedEmployee);
-      //router.push('/employee/list');
+      try{
+        await updateEmployee(selectedEmployee);
+        window.location.reload(false);
+      } catch{
+        console.error('Error deleting employee:', error);
+      }
     };
 
     const handleSelectEmployeeForUpdate = (employee) => {
@@ -322,7 +334,7 @@ export default function EmployeeList(){
           <Accordion defaultActiveKey="0">
             {employees.map(employee => (
               <Accordion.Item eventKey={employee.employeeID} key={employee.employeeID}>
-              <Accordion.Header>
+              <Accordion.Header onClick={() => handleSelectEmployeeForUpdate(employee)}>
                 <div className="row">
                   <div className="col-md-auto">
                     <strong>Employee ID:</strong> {employee.employeeID}
@@ -334,8 +346,7 @@ export default function EmployeeList(){
                     <strong>Email:</strong> {employee.email}
                   </div>
                   <div className="col-md-auto">
-                    <Button variant="danger" onClick={() => handleDelete(employee.employeeID)}>Delete</Button>
-                    <Button variant="success" onClick={() => handleSelectEmployeeForUpdate(employee)}>Select</Button>
+                    <Button variant="danger" onClick={(e) => handleDelete(e, employee.employeeID)}>Delete</Button>
                   </div>
                 </div>
               </Accordion.Header>
