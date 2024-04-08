@@ -331,7 +331,7 @@ export default function EmployeeList(){
                       onChange={handleChange}
                       required
                     />
-                    <Form.Control.Feedback type="invalid">Enter a valid Canadian province ("QC" or "Quebec").</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">Enter a valid Canadian province (QC or Quebec).</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -349,7 +349,7 @@ export default function EmployeeList(){
                       pattern="[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ]( )?\d[ABCEGHJKLMNPRSTVWXYZ]\d"
                       required
                     />
-                    <Form.Control.Feedback type="invalid">Enter a valid Canadian postal code ("A1B 2C3").</Form.Control.Feedback>
+                    <Form.Control.Feedback type="invalid">Enter a valid Canadian postal code (A1B 2C3).</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -588,7 +588,7 @@ export default function EmployeeList(){
                         pattern='^(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT|Alberta|British Columbia|Manitoba|New Brunswick|Newfoundland and Labrador|Nova Scotia|Northwest Territories|Nunavut|Ontario|Prince Edward Island|Quebec|Saskatchewan|Yukon)$'
                         required
                       />
-                      <Form.Control.Feedback type="invalid">Enter a valid Canadian province (Abbreviated or Full).</Form.Control.Feedback>
+                      <Form.Control.Feedback type="invalid">Enter a valid Canadian province (QC or Quebec).</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
@@ -606,7 +606,7 @@ export default function EmployeeList(){
                         pattern="[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ]( )?\d[ABCEGHJKLMNPRSTVWXYZ]\d"
                         required
                       />
-                      <Form.Control.Feedback type="invalid">Enter a valid Canadian postal code ("A1B 2C3").</Form.Control.Feedback>
+                      <Form.Control.Feedback type="invalid">Enter a valid Canadian postal code (A1B 2C3).</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
