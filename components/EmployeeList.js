@@ -9,6 +9,13 @@ export default function EmployeeList(){
     const [employees, setEmployees] = useState([]);
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);  
+    const [validatedSubmit, setValidatedSubmit] = useState(false);
+    const [validatedUpdate, setValidatedUpdate] = useState(false);
+    const [emailError, setEmailError] = useState("Enter a valid email");
+    const [emailUpdateError, setEmailUpdateError] = useState("Enter a valid email");
+    const [duplicateEmail, setDuplicateEmail] = useState(false)
+    const [duplicateUpdateEmail, setUpdateDuplicateEmail] = useState(false)
+
     const [employee, setEmployee] = useState({
       employeeID: '',
       givenName: '',
@@ -26,7 +33,6 @@ export default function EmployeeList(){
       department: '',
       hireDate: '',
     });
-
     const [selectedEmployee, setSelectedEmployee] = useState({
       employeeID: '',
       givenName: '',
@@ -44,6 +50,34 @@ export default function EmployeeList(){
       department: '',
       hireDate: '',
     });
+    const [selectedEmployeeCopy, setSelectedEmployeeCopy] = useState({
+      employeeID: '',
+      givenName: '',
+      surname: '',
+      email: '',
+      password: '',
+      SIN: '',
+      addrStreet: '',
+      addrCity: '',
+      addrProv: '',
+      addrPostal: '',
+      isManager: 0,
+      empManagerID: null,
+      status: 'Active',
+      department: '',
+      hireDate: '',
+    });
+
+    function checkDuplicateEmails(email){
+      for (const emp of employees) {
+        if (emp.email === email) {
+          setEmailError("That email is already is use.")
+          return true; 
+        } 
+      }
+      setDuplicateEmail(false)
+      return false; 
+    };
 
     useEffect(() => {
       fetch('https://employeemanager-y5z4.onrender.com/employees')
@@ -55,46 +89,95 @@ export default function EmployeeList(){
     const handleChange = (e) => {
       const { name, value } = e.target;
       setEmployee({ ...employee, [name]: value });
+
+      if (name === 'email') {
+        const isDuplicate = checkDuplicateEmails(value);
+        setDuplicateEmail(isDuplicate);
+        if (isDuplicate) {
+          setEmailError('That email is already in use.');
+        } else {
+          setEmailError('');
+        }
+      }
     };
 
     const handleChangeUpdate = (e) => {
       const { name, value } = e.target;
-      setSelectedEmployee({ ...selectedEmployee, [name]: value });
+      setSelectedEmployee(prevState => ({
+        ...prevState,
+        [name]: value
+      }))
+    
+      if (name === 'email') {
+        const isDuplicate = checkDuplicateEmails(value);
+        if (isDuplicate && value !== selectedEmployeeCopy.email) {
+          setUpdateDuplicateEmail(isDuplicate);
+          setEmailUpdateError('That email is already in use.');
+        } else {
+          setEmailUpdateError('');
+        }
+      }
     };
 
     async function handleSubmit(e){
       e.preventDefault();
-      e.stopPropagation();
-      try{
-        await addEmployee(employee);
-        window.location.reload(false);
-      } catch{
-        console.error('Error deleting employee:', error);
+      if (duplicateEmail) {
+        setValidatedSubmit(false);
+        return;
       }
+      const form = e.currentTarget;
+      if (form.checkValidity() === false) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      else{
+        e.preventDefault();
+        try{
+          await addEmployee(employee);
+          window.location.reload(false);
+        } catch(err){
+          console.error('Error adding employee:', err);
+        }
+      }
+      setValidatedSubmit(true);
     };
 
-    async function handleDelete(event, id){
-      event.stopPropagation();
+    async function handleDelete(e, id){
+      e.stopPropagation();
       try{
         await deleteEmployee(id);
         window.location.reload(false);
-      } catch{
-        console.error('Error deleting employee:', error);
+      } catch(err){
+        console.error('Error deleting employee:', err);
       }
     };
 
     async function handleUpdate(e){
       e.preventDefault();
-      try{
-        await updateEmployee(selectedEmployee);
-        window.location.reload(false);
-      } catch{
-        console.error('Error deleting employee:', error);
+      if (duplicateUpdateEmail) {
+        setValidatedUpdate(false);
+        return;
       }
+      const form = e.currentTarget;
+      if (form.checkValidity() === false) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      else{
+        e.preventDefault();
+        try{
+          await updateEmployee(selectedEmployee);
+          window.location.reload(false);
+        } catch(err){
+          console.error('Error updating employee:', er);
+        }
+      }
+      setValidatedUpdate(true);
     };
 
     const handleSelectEmployeeForUpdate = (employee) => {
       setSelectedEmployee(employee);
+      setSelectedEmployeeCopy(employee);
     };
   
     return (
@@ -104,11 +187,11 @@ export default function EmployeeList(){
         <Button variant="primary" onClick={handleShow}>Add New Employee</Button>
         
         <Modal show={show} onHide={handleClose}>
-            <Modal.Header closeButton>
-            <Modal.Title>Add New Employee</Modal.Title>
+          <Modal.Header closeButton>
+          <Modal.Title>Add New Employee</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form onSubmit={handleSubmit}>
+            <Form noValidate validated={validatedSubmit} onSubmit={handleSubmit}>
               <div className="row">
                 <div className="col-sm-6">
                 <Form.Group controlId="formID" style={{ marginBottom: '15px' }}>
@@ -137,6 +220,7 @@ export default function EmployeeList(){
                       onChange={handleChange}
                       required
                     />
+                    <Form.Control.Feedback type="invalid">Enter employee name.</Form.Control.Feedback>
                   </Form.Group>
                 </div>
                 <div className="col-sm-6">
@@ -150,6 +234,7 @@ export default function EmployeeList(){
                       onChange={handleChange}
                       required
                     />
+                    <Form.Control.Feedback type="invalid">Enter employee surname.</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -163,9 +248,12 @@ export default function EmployeeList(){
                       placeholder="Enter email"
                       name="email"
                       value={employee.email}
+                      isInvalid={duplicateEmail}
                       onChange={handleChange}
+                      pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                       required
                     />
+                      <Form.Control.Feedback type="invalid">{emailError}</Form.Control.Feedback>
                   </Form.Group>
                 </div>
                 <div className="col-sm-6">
@@ -179,6 +267,7 @@ export default function EmployeeList(){
                       onChange={handleChange}
                       required
                     />
+                      <Form.Control.Feedback type="invalid">Enter a password.</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -195,6 +284,7 @@ export default function EmployeeList(){
                       onChange={handleChange}
                       required
                     />
+                    <Form.Control.Feedback type="invalid">Enter the SIN number (Numbers only).</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -211,6 +301,7 @@ export default function EmployeeList(){
                       onChange={handleChange}
                       required
                     />
+                    <Form.Control.Feedback type="invalid">Enter the full address.</Form.Control.Feedback>
                   </Form.Group>
                 </div>
                 <div className="col-sm-6">
@@ -222,8 +313,10 @@ export default function EmployeeList(){
                       name="addrCity"
                       value={employee.addrCity}
                       onChange={handleChange}
+                      pattern= "[a-zA-Z]+"
                       required
                     />
+                      <Form.Control.Feedback type="invalid">Enter the city.</Form.Control.Feedback>
                   </Form.Group>
                 </div>
                 <div className="col-sm-6">
@@ -234,9 +327,11 @@ export default function EmployeeList(){
                       placeholder="Enter address province"
                       name="addrProv"
                       value={employee.addrProv}
+                      pattern='^(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT|Alberta|British Columbia|Manitoba|New Brunswick|Newfoundland and Labrador|Nova Scotia|Northwest Territories|Nunavut|Ontario|Prince Edward Island|Quebec|Saskatchewan|Yukon)$'
                       onChange={handleChange}
                       required
                     />
+                    <Form.Control.Feedback type="invalid">Enter a valid Canadian province ("QC" or "Quebec").</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -251,8 +346,10 @@ export default function EmployeeList(){
                       name="addrPostal"
                       value={employee.addrPostal}
                       onChange={handleChange}
+                      pattern="[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ]( )?\d[ABCEGHJKLMNPRSTVWXYZ]\d"
                       required
                     />
+                    <Form.Control.Feedback type="invalid">Enter a valid Canadian postal code ("A1B 2C3").</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -299,6 +396,7 @@ export default function EmployeeList(){
                       onChange={handleChange}
                       required
                     />
+                      <Form.Control.Feedback type="invalid">Choose department #.</Form.Control.Feedback>
                   </Form.Group>
                 </div>
               </div>
@@ -329,7 +427,6 @@ export default function EmployeeList(){
             </Form>
           </Modal.Body>
         </Modal>
-
       </div>
           <Accordion defaultActiveKey="0">
             {employees.map(employee => (
@@ -351,7 +448,7 @@ export default function EmployeeList(){
                 </div>
               </Accordion.Header>
               <Accordion.Body>
-                <Form onSubmit={handleUpdate}>
+                <Form noValidate validated={validatedUpdate} onSubmit={handleUpdate}>
                 <div className="row">
                   <div className="col-sm-6">
                   <Form.Group controlId="formID" style={{ marginBottom: '15px' }}>
@@ -380,6 +477,7 @@ export default function EmployeeList(){
                         onChange={handleChangeUpdate}
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter employee name.</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                   <div className="col-sm-6">
@@ -393,6 +491,7 @@ export default function EmployeeList(){
                         onChange={handleChangeUpdate}
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter employee surname.</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
@@ -407,8 +506,11 @@ export default function EmployeeList(){
                         name="email"
                         defaultValue={employee.email}
                         onChange={handleChangeUpdate}
+                        isInvalid={duplicateEmail}
+                        pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
                         required
                       />
+                      <Form.Control.Feedback type="invalid">{emailUpdateError}</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                   <div className="col-sm-6">
@@ -422,6 +524,7 @@ export default function EmployeeList(){
                         onChange={handleChangeUpdate}
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter a password.</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
@@ -438,6 +541,7 @@ export default function EmployeeList(){
                         onChange={handleChangeUpdate}
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter the SIN number (Numbers only).</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
@@ -454,6 +558,7 @@ export default function EmployeeList(){
                         onChange={handleChangeUpdate}
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter the full address.</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                   <div className="col-sm-6">
@@ -465,8 +570,10 @@ export default function EmployeeList(){
                         name="addrCity"
                         defaultValue={employee.addrCity}
                         onChange={handleChangeUpdate}
+                        pattern= "[a-zA-Z]+"
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter the city.</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                   <div className="col-sm-6">
@@ -478,8 +585,10 @@ export default function EmployeeList(){
                         name="addrProv"
                         defaultValue={employee.addrProv}
                         onChange={handleChangeUpdate}
+                        pattern='^(AB|BC|MB|NB|NL|NS|NT|NU|ON|PE|QC|SK|YT|Alberta|British Columbia|Manitoba|New Brunswick|Newfoundland and Labrador|Nova Scotia|Northwest Territories|Nunavut|Ontario|Prince Edward Island|Quebec|Saskatchewan|Yukon)$'
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter a valid Canadian province (Abbreviated or Full).</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
@@ -494,8 +603,10 @@ export default function EmployeeList(){
                         name="addrPostal"
                         defaultValue={employee.addrPostal}
                         onChange={handleChangeUpdate}
+                        pattern="[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ]( )?\d[ABCEGHJKLMNPRSTVWXYZ]\d"
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Enter a valid Canadian postal code ("A1B 2C3").</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
@@ -542,6 +653,7 @@ export default function EmployeeList(){
                         onChange={handleChangeUpdate}
                         required
                       />
+                      <Form.Control.Feedback type="invalid">Choose department #.</Form.Control.Feedback>
                     </Form.Group>
                   </div>
                 </div>
