@@ -18,6 +18,9 @@ export default function Hello() {
             <Nav className="me-auto">
               <Nav.Link href="/employee/list">Employee List</Nav.Link>
             </Nav>
+            <Nav className="me-auto">
+              <Nav.Link href="/shift/schedule">Shift Schedule</Nav.Link>
+            </Nav>
           </Navbar.Collapse>
           </Container>
         </Navbar>
