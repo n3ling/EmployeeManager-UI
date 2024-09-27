@@ -10,8 +10,8 @@ function ShiftScheduler() {
   const [events, setEvents] = useState<ScheduleEventType[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [key, setKey] = useState(0)
-  const [selectedDate, setSelectedDate] = useState(new Date())
-
+  const [errors, setErrors] = useState({ startTime: '', endTime: '' });
+  const [isFormValid, setIsFormValid] = useState(true);
   const [shift, setShift] = useState({
     shiftID: 0, 
     shiftDate: '',
@@ -28,12 +28,52 @@ function ShiftScheduler() {
     return `${year}-${month}-${day}`;
   };
 
-  const handleInputChange = (e) => {
-    const { id, value, type, checked } = e.target;
-    setShift((prevShift) => ({
-      ...prevShift,
-      [id]: type === 'checkbox' ? checked : value,
-    }));
+    // Check if time is valid (in 15-minute intervals)
+    const isTimeValid = (time) => {
+      const minutes = new Date(`1970-01-01T${time}:00`).getMinutes();
+      return [0, 15, 30, 45].includes(minutes);
+    };
+  
+    // Check if the end time is after the start time
+    const isEndTimeValid = (startTime, endTime) => {
+      return new Date(`1970-01-01T${endTime}:00`) > new Date(`1970-01-01T${startTime}:00`);
+    };
+
+    const handleInputChange = (e) => {
+      const { id, value, type, checked } = e.target;
+      const newShift = {
+        ...shift,
+        [id]: type === 'checkbox' ? checked : value,
+      };
+  
+      setShift(newShift);
+      validateShiftTimes(newShift);
+    };
+
+      // Validate shift times
+  const validateShiftTimes = (newShift) => {
+    let startTimeError = '';
+    let endTimeError = '';
+    let isValid = true;
+
+    // Validate start time
+    if (!isTimeValid(newShift.startTime)) {
+      startTimeError = 'Start time must be at a 15-minute interval (:00, :15, :30, :45).';
+      isValid = false;
+    }
+
+    // Validate end time
+    if (!isTimeValid(newShift.endTime)) {
+      endTimeError = 'End time must be at a 15-minute interval (:00, :15, :30, :45).';
+      isValid = false;
+    } else if (!isEndTimeValid(newShift.startTime, newShift.endTime)) {
+      endTimeError = 'End time must be after start time.';
+      isValid = false;
+    }
+
+    // Update error state and form validity
+    setErrors({ startTime: startTimeError, endTime: endTimeError });
+    setIsFormValid(isValid);
   };
 
   const transformDataToEvents = (data) => {
@@ -95,6 +135,7 @@ function ShiftScheduler() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!isFormValid) return;
     console.log(shift);
 
     try {
@@ -172,18 +213,30 @@ function ShiftScheduler() {
               <Form.Control 
                 type="time" 
                 value={shift.startTime}
-                onChange={handleInputChange} 
+                onChange={handleInputChange}
+                isInvalid={!!errors.startTime} 
                 required 
               />
+              {errors.startTime && (
+                <Form.Control.Feedback type="invalid">
+                  {errors.startTime}
+                </Form.Control.Feedback>
+              )}
             </Form.Group>
             <Form.Group controlId="endTime">
               <Form.Label>End Time</Form.Label>
               <Form.Control 
                 type="time" 
                 value={shift.endTime}
-                onChange={handleInputChange} 
+                onChange={handleInputChange}
+                isInvalid={!!errors.endTime} 
                 required 
               />
+              {errors.endTime && (
+                <Form.Control.Feedback type="invalid">
+                  {errors.endTime}
+                </Form.Control.Feedback>
+              )}
             </Form.Group>
             <Form.Group controlId="isHoliday">
               <Form.Check 
@@ -199,7 +252,7 @@ function ShiftScheduler() {
           <Button variant="danger" onClick={(e) => handleDelete(e, key)}>
             Delete
           </Button>
-          <Button variant="primary" onClick={handleSubmit}>
+          <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid}>
             Save Changes
           </Button>
         </Modal.Footer>
