@@ -33,6 +33,9 @@ function ShiftScheduler() {
     checkedIn: false
   });
   const [selectedEmployee, setSelectedEmployee] = useState(attendance.empID || "");
+  const [isOverlap, setIsOverlap] = useState(false);
+  const [overlapMessage, setOverlapMessage] = useState('');
+
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -310,6 +313,39 @@ async function handleAttendSubmit(e){
       ...prevAttend,
       empID: e.target.value
     }))
+
+      // Perform overlap check
+  if (shift) {
+    const { shiftDate, startTime, endTime } = shift;
+
+    // Convert times to Date objects for easy comparison
+    const shiftStart = new Date(`${shiftDate}T${startTime}`);
+    const shiftEnd = new Date(`${shiftDate}T${endTime}`);
+
+    // Check for overlap
+    const hasOverlap = attendance.some(att => {
+      if (att.empID === Number(e.target.value)) {
+        const otherShift = data.find(s => s.shiftID === att.shiftID);
+
+        if (otherShift && otherShift.shiftDate === shiftDate) {
+          const otherShiftStart = new Date(`${otherShift.shiftDate}T${otherShift.startTime}`);
+          const otherShiftEnd = new Date(`${otherShift.shiftDate}T${otherShift.endTime}`);
+
+          // Check if the time intervals overlap
+          return (shiftStart < otherShiftEnd && shiftEnd > otherShiftStart);
+        }
+      }
+      return false;
+    });
+
+    if (hasOverlap) {
+      setIsOverlap(true);
+      setOverlapMessage("This shift overlaps with another assigned shift.");
+    } else {
+      setIsOverlap(false);
+      setOverlapMessage('');
+    }
+  }
   };
 
   return (
@@ -462,9 +498,11 @@ async function handleAttendSubmit(e){
                 variant="primary" 
                 onClick={handleAttendSubmit} 
                 style={{ marginRight: '10px' }} // Add spacing between buttons
+                disabled={isOverlap}
               >
                 Assign
               </Button>
+
               
               {/* Remove Button */}
               <Button 
@@ -474,6 +512,13 @@ async function handleAttendSubmit(e){
                 Remove
               </Button>
             </div>
+
+            {/* Overlap Message */}
+            {isOverlap && (
+              <p style={{ color: 'red', marginTop: '10px' }}>
+                {overlapMessage}
+              </p>
+            )}
           </Form.Group>
           </Form>
 
