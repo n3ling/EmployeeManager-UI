@@ -350,53 +350,53 @@ function ShiftScheduler() {
     const selectedEmpID = Number(e.target.value);
     setSelectedEmployee(e.target.value);
     setAttend(prevAttend => ({
-      ...prevAttend,
-      empID: selectedEmpID
+        ...prevAttend,
+        empID: selectedEmpID
     }));
 
-    // Perform overlap check
     if (shift) {
       const { shiftDate, startTime, endTime, shiftID } = shift; // Get the current shiftID
-
+  
       // Convert times to Date objects for easy comparison
       const shiftStart = new Date(`${shiftDate}T${startTime}`);
       const shiftEnd = new Date(`${shiftDate}T${endTime}`);
-
+  
       // Check if the selected employee is already assigned to the current shift
-      const isCurrentlyAssigned = attendance.some(att => att.empID === selectedEmpID && att.shiftID === shiftID);
-
+      const isCurrentlyAssigned = attendance.some(att => Number(att.empID) === Number(selectedEmpID) && Number(att.shiftID === Number(shiftID)));
+      console.log("Assigned: " + isCurrentlyAssigned )
       // If the employee is currently assigned to this shift, don't check for overlap
       if (isCurrentlyAssigned) {
-        setIsOverlap(false);
-        setOverlapMessage(''); // Clear the message if they are already assigned
-        return; // Exit early, no overlap check needed
-      }
-
-      // Check for overlap, excluding the current shift
-      const hasOverlap = attendance.some(att => {
-        if (att.empID === selectedEmpID) {
-          const otherShift = data.find(s => s.shiftID === att.shiftID);
-
-          // Only check other shifts that are not the current shift
-          if (otherShift && otherShift.shiftID !== shiftID && otherShift.shiftDate === shiftDate) {
-            const otherShiftStart = new Date(`${otherShift.shiftDate}T${otherShift.startTime}`);
-            const otherShiftEnd = new Date(`${otherShift.shiftDate}T${otherShift.endTime}`);
-
-            // Check if the time intervals overlap
-            return (shiftStart < otherShiftEnd && shiftEnd > otherShiftStart);
-          }
-        }
-        return false;
-      });
-
-      if (hasOverlap) {
-        setIsOverlap(true);
-        setOverlapMessage("This shift overlaps with another assigned shift.");
+          setIsOverlap(false);
+          setOverlapMessage(''); // Clear the message if they are already assigned
       } else {
-        setIsOverlap(false);
-        setOverlapMessage('');
+          // Check for overlap, excluding the current shift
+          const hasOverlap = attendance.some(att => {
+              if (att.empID === selectedEmpID) {
+                  const otherShift = data.find(s => s.shiftID === att.shiftID);
+  
+                  // Only check other shifts that are not the current shift
+                  if (otherShift && otherShift.shiftID !== shiftID && otherShift.shiftDate === shiftDate) {
+                      const otherShiftStart = new Date(`${otherShift.shiftDate}T${otherShift.startTime}`);
+                      const otherShiftEnd = new Date(`${otherShift.shiftDate}T${otherShift.endTime}`);
+  
+                      // Check if the time intervals overlap, including edge cases for equal times
+                      const overlapCheck = (shiftStart <= otherShiftEnd && shiftEnd >= otherShiftStart);
+                      console.log(`Checking overlap with ${otherShift.shiftID}:`, overlapCheck); // Log the overlap check
+                      return overlapCheck;
+                  }
+              }
+              return false;
+          });
+  
+          if (hasOverlap) {
+              setIsOverlap(true);
+              setOverlapMessage("This shift overlaps with another assigned shift.");
+          } else {
+              setIsOverlap(false);
+              setOverlapMessage('');
+          }
       }
-    }
+  }
 };
 
   return (
