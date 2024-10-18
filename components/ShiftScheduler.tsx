@@ -4,12 +4,19 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Form } from 'react-bootstrap';
 import { addShift, updateShift, deleteShift } from '@/lib/shiftData';
+import { addAttendance, updateAttendance, deleteAttendance } from '@/lib/attendanceData';
+import React from 'react';
 
 function ShiftScheduler() {
   const [data, setData] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [attendance, setAttendance] = useState([]);
+  const [attendanceID, setAttendanceID] = useState(0);
   const [events, setEvents] = useState<ScheduleEventType[]>([]);
   const [isModalVisible, setIsModalVisible] = useState(false)
+  const [isModalAttendVisible, setIsModalAttendVisible] = useState(false)
   const [key, setKey] = useState(0)
+  const [keyAttend, setKeyAttend] = useState(0)
   const [errors, setErrors] = useState({ startTime: '', endTime: '' });
   const [isFormValid, setIsFormValid] = useState(true);
   const [shift, setShift] = useState({
@@ -19,6 +26,13 @@ function ShiftScheduler() {
     endTime: '',
     isHoliday: false
   });
+  const [attend, setAttend] = useState({
+    attendanceID: 0, 
+    shiftID: 0,
+    empID: 0,
+    checkedIn: false
+  });
+  const [selectedEmployee, setSelectedEmployee] = useState(attendance.empID || "");
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -28,29 +42,29 @@ function ShiftScheduler() {
     return `${year}-${month}-${day}`;
   };
 
-    // Check if time is valid (in 15-minute intervals)
-    const isTimeValid = (time) => {
-      const minutes = new Date(`1970-01-01T${time}:00`).getMinutes();
-      return [0, 15, 30, 45].includes(minutes);
-    };
-  
-    // Check if the end time is after the start time
-    const isEndTimeValid = (startTime, endTime) => {
-      return new Date(`1970-01-01T${endTime}:00`) > new Date(`1970-01-01T${startTime}:00`);
+  // Check if time is valid (in 15-minute intervals)
+  const isTimeValid = (time) => {
+    const minutes = new Date(`1970-01-01T${time}:00`).getMinutes();
+    return [0, 15, 30, 45].includes(minutes);
+  };
+
+  // Check if the end time is after the start time
+  const isEndTimeValid = (startTime, endTime) => {
+    return new Date(`1970-01-01T${endTime}:00`) > new Date(`1970-01-01T${startTime}:00`);
+  };
+
+  const handleInputChange = (e) => {
+    const { id, value, type, checked } = e.target;
+    const newShift = {
+      ...shift,
+      [id]: type === 'checkbox' ? checked : value,
     };
 
-    const handleInputChange = (e) => {
-      const { id, value, type, checked } = e.target;
-      const newShift = {
-        ...shift,
-        [id]: type === 'checkbox' ? checked : value,
-      };
-  
-      setShift(newShift);
-      validateShiftTimes(newShift);
-    };
+    setShift(newShift);
+    validateShiftTimes(newShift);
+  };
 
-      // Validate shift times
+  // Validate shift times
   const validateShiftTimes = (newShift) => {
     let startTimeError = '';
     let endTimeError = '';
@@ -76,18 +90,28 @@ function ShiftScheduler() {
     setIsFormValid(isValid);
   };
 
-  const transformDataToEvents = (data) => {
+  const transformDataToEvents = (data, attendance, employees) => {  
+    const findAttendance = attendance.find(att => att.shiftID === data.shiftID);
+    let description = "Unassigned";
+    if (findAttendance){
+      const employee = employees.find(emp => emp.employeeID === findAttendance.empID);
+      if(employee){
+        description = `${employee.employeeID}. ${employee.givenName} ${employee.surname}`;
+      }
+    }
+    
     return {
       id: data.shiftID.toString(),
       title: `Shift ${data.shiftID}`,
       start: `${data.shiftDate}T${data.startTime}`,
       end: `${data.shiftDate}T${data.endTime}`,
-      defaultTheme: data.isHoliday > 0 ? 'yellow' : 'blue'
+      defaultTheme: data.isHoliday > 0 ? 'yellow' : 'blue',
+      description: description
     }
   }
 
   const transformAllData = (data) => {
-    return data.map(shift => transformDataToEvents(shift));
+    return data.map(shift => transformDataToEvents(shift, attendance, employees));
   }
 
   const findHighestID = (data) => {
@@ -98,11 +122,23 @@ function ShiftScheduler() {
     }, 0);
   }
 
-  useEffect(() => {
-    fetch('https://employeemanager-y5z4.onrender.com/shift')
+  const fetchData = (url, setState) => {
+    fetch(url)
       .then(res => res.json())
-      .then(data => setData(data))
-      .catch(err => console.error('Error fetching data:', err));
+      .then(data => setState(data))
+      .catch(err => console.error(`Error fetching data from ${url}:`, err));
+  };
+  
+  useEffect(() => {
+    fetchData('https://employeemanager-y5z4.onrender.com/shift', setData);
+  }, []);
+  
+  useEffect(() => {
+    fetchData('https://employeemanager-y5z4.onrender.com/employees', setEmployees);
+  }, []);
+  
+  useEffect(() => {
+    fetchData('https://employeemanager-y5z4.onrender.com/attendance', setAttendance);
   }, []);
   
   useEffect(() => {
@@ -112,14 +148,20 @@ function ShiftScheduler() {
     }
   }, [data]); 
 
-  console.log(events)
-
   function showModal() {
     setIsModalVisible(true)
   }
 
   function hideModal() {
     setIsModalVisible(false)
+  }
+
+  function showModalAttend() {
+    setIsModalAttendVisible(true)
+  }
+
+  function hideModalAttend() {
+    setIsModalAttendVisible(false)
   }
 
   function handleAddEvent(date: Date) {
@@ -136,8 +178,6 @@ function ShiftScheduler() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!isFormValid) return;
-    console.log(shift);
-
     try {
         let success;
 
@@ -164,21 +204,37 @@ function ShiftScheduler() {
     } catch (error) {
         console.error("An error occurred while processing the shift:", error);
     }
-}
+  }
 
+  function findAttendanceIDByShiftID(attendanceList, targetShiftID) {
+    const attendanceRecord = attendanceList.find(att => att.shiftID === parseInt(targetShiftID));
+  
+    return attendanceRecord ? attendanceRecord.attendanceID : null;
+  }
 
   function handleClickEvent(day: Date, dayISO: string | null, event: ScheduleEventProps) {
-    setKey(event.id)
-    console.log(event.id)
+    setKey(event.id);
+
+    // Get the attendance ID based on the shift ID
+    let attendID = findAttendanceIDByShiftID(attendance, event.id); // Use event.id instead of key
+
+    // Update shift and attendance state using attendID directly
     setShift({
-      shiftID: event.id, 
-      shiftDate: formatDate(day),
-      startTime: event.start.split('T')[1],
-      endTime: event.end.split('T')[1],
-      isHoliday: event.defaultTheme == "blue"? false : true
-    })
-    showModal()
-  }
+        shiftID: event.id,
+        shiftDate: formatDate(day),
+        startTime: event.start.split('T')[1],
+        endTime: event.end.split('T')[1],
+        isHoliday: event.defaultTheme === "blue" ? false : true
+    });
+
+    setAttend(prevAttend => ({
+        ...prevAttend,
+        attendanceID: attendID, // Use attendID directly
+        shiftID: event.id
+    }));
+    setKeyAttend(attendID)
+    showModalAttend();
+}
 
   async function handleDelete(e, id){
     e.stopPropagation();
@@ -188,6 +244,72 @@ function ShiftScheduler() {
     } catch(err){
       console.error('Error deleting employee:', err);
     }
+  };
+
+async function handleAttendSubmit(e){
+  e.preventDefault();
+  console.log(keyAttend)
+  console.log(attend)
+  try {
+      let success;
+
+      if (keyAttend) { 
+          success = await updateAttendance(attend);
+          if (success) {
+              console.log("Shift updated successfully");
+          } else {
+              console.error("Failed to update attendance");
+          }
+      } else {
+          success = await addAttendance(attend); 
+          if (success) {
+              console.log("Shift added successfully");
+          } else {
+              console.error("Failed to add attendance");
+          }
+      }
+
+      if (success) {
+          window.location.reload(); 
+      }
+
+  } catch (error) {
+      console.error("An error occurred while processing the attendance:", error);
+  }
+}
+  async function handleRemoveAttend(e){
+    console.log(typeof(key))
+    console.log(attendance)
+
+    if (!key || attendance.length === 0) {
+      console.error('Shift ID or attendance data not available');
+      return;
+    }
+
+    const matchingAttendance = attendance.find(att => att.shiftID == key);
+    if (!matchingAttendance) {
+      console.error('No matching attendance found');
+      return;
+    }
+
+    const attendanceID = matchingAttendance.attendanceID;
+    console.log(attendanceID)
+
+    e.stopPropagation();
+    try{
+      await deleteAttendance(attendanceID);
+      window.location.reload();
+    } catch(err){
+      console.error('Error deleting attendance:', err);
+    }
+  }
+
+  const handleEmployeeSelectChange = (e) => {
+    setSelectedEmployee(e.target.value);
+    setAttend(prevAttend => ({
+      ...prevAttend,
+      empID: e.target.value
+    }))
   };
 
   return (
@@ -256,6 +378,118 @@ function ShiftScheduler() {
             Save Changes
           </Button>
         </Modal.Footer>
+      </Modal>
+
+      <Modal show={isModalAttendVisible} onHide={hideModalAttend}>
+        <Modal.Header closeButton>
+          <Modal.Title>{key == null ? 'Add Shift' : 'Edit Shift'}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group controlId="shiftDate">
+              <Form.Label>Shift Date</Form.Label>
+              <Form.Control 
+                type="date"  
+                value={shift.shiftDate}
+                readOnly
+                required 
+              />
+            </Form.Group>
+            <Form.Group controlId="startTime">
+              <Form.Label>Start Time</Form.Label>
+              <Form.Control 
+                type="time" 
+                value={shift.startTime}
+                onChange={handleInputChange}
+                isInvalid={!!errors.startTime} 
+                required 
+              />
+              {errors.startTime && (
+                <Form.Control.Feedback type="invalid">
+                  {errors.startTime}
+                </Form.Control.Feedback>
+              )}
+            </Form.Group>
+            <Form.Group controlId="endTime">
+              <Form.Label>End Time</Form.Label>
+              <Form.Control 
+                type="time" 
+                value={shift.endTime}
+                onChange={handleInputChange}
+                isInvalid={!!errors.endTime} 
+                required 
+              />
+              {errors.endTime && (
+                <Form.Control.Feedback type="invalid">
+                  {errors.endTime}
+                </Form.Control.Feedback>
+              )}
+            </Form.Group>
+            <Form.Group controlId="isHoliday">
+              <Form.Check 
+                type="checkbox" 
+                label="Is Holiday?" 
+                checked={shift.isHoliday}
+                onChange={handleInputChange} 
+              />
+            </Form.Group>
+          </Form>
+
+          <hr/>
+
+          {/* Second Form: Employee Assignment */}
+          <Form onSubmit={handleAttendSubmit}>
+          <Form.Group controlId="employeeSelect">
+            <Form.Label>Assign Employee</Form.Label>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <Form.Control 
+                as="select" 
+                value={selectedEmployee || ""} // Set the assigned employee as default, or "Select Employee" if none
+                onChange={handleEmployeeSelectChange}
+                required
+                style={{ flex: 1, marginRight: '10px' }} // Ensure the dropdown takes full width and has space for buttons
+              >
+                <option value="">Select Employee</option> {/* Default option */}
+                {employees.map((employee) => (
+                  <option key={employee.employeeID} value={employee.employeeID}>
+                    [{employee.employeeID}] {employee.givenName} {employee.surname}
+                  </option>
+                ))}
+              </Form.Control>
+              
+              {/* Assign Button */}
+              <Button 
+                variant="primary" 
+                onClick={handleAttendSubmit} 
+                style={{ marginRight: '10px' }} // Add spacing between buttons
+              >
+                Assign
+              </Button>
+              
+              {/* Remove Button */}
+              <Button 
+                variant="danger" 
+                onClick={handleRemoveAttend} // Assuming the remove logic doesn't need selectedEmployee (removes directly)
+              >
+                Remove
+              </Button>
+            </div>
+          </Form.Group>
+          </Form>
+
+        </Modal.Body>
+
+
+
+        <Modal.Footer>
+          <Button variant="danger" onClick={(e) => handleDelete(e, key)}>
+            Delete
+          </Button>
+          <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid}>
+            Save Changes
+          </Button>
+        </Modal.Footer>
+
       </Modal>
 
       <WeeklySchedule style={{ padding: '24px' }} showDateNavigator events={events} onAddEvent={handleAddEvent} onClickEvent={handleClickEvent}/>
