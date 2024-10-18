@@ -35,7 +35,8 @@ function ShiftScheduler() {
   const [selectedEmployee, setSelectedEmployee] = useState(attendance.empID || "");
   const [isOverlap, setIsOverlap] = useState(false);
   const [overlapMessage, setOverlapMessage] = useState('');
-
+  const [overlapEditShiftMessage, setOverlapEditShiftMessage] = useState('');
+  const [isOverlapShift, setIsOverlapShift] = useState(false);
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -86,13 +87,13 @@ function ShiftScheduler() {
         }
         return false;
       });
-
+      console.log(hasOverlap)
       if (hasOverlap) {
-        setIsOverlap(true);
-        setOverlapMessage("This shift creates a conflict with another shift.");
+        setIsOverlapShift(true);
+        setOverlapEditShiftMessage("This edit will cause a conflict with another shift.");
       } else {
-        setIsOverlap(false);
-        setOverlapMessage('');
+        setIsOverlapShift(false);
+        setOverlapEditShiftMessage('');
       }
     }
   };
@@ -380,7 +381,7 @@ function ShiftScheduler() {
                       const otherShiftEnd = new Date(`${otherShift.shiftDate}T${otherShift.endTime}`);
   
                       // Check if the time intervals overlap, including edge cases for equal times
-                      const overlapCheck = (shiftStart <= otherShiftEnd && shiftEnd >= otherShiftStart);
+                      const overlapCheck = (shiftStart < otherShiftEnd && shiftEnd > otherShiftStart);
                       console.log(`Checking overlap with ${otherShift.shiftID}:`, overlapCheck); // Log the overlap check
                       return overlapCheck;
                   }
@@ -460,7 +461,7 @@ function ShiftScheduler() {
           <Button variant="danger" onClick={(e) => handleDelete(e, key)}>
             Delete
           </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid || isOverlap}>
+          <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid || isOverlapShift}>
             Save Changes
           </Button>
         </Modal.Footer>
@@ -520,17 +521,19 @@ function ShiftScheduler() {
               />
             </Form.Group>
 
-            {/* {isOverlap && (
+            {/* Show overlap warning message if it exists */}
+            {isOverlapShift && (
               <p style={{ color: 'red', marginTop: '10px' }}>
-                {overlapMessage}
-              </p>
-            )} */}
+                {overlapEditShiftMessage}
+                </p>)}
+
+
 
             <div className="d-flex justify-content-end" style={{ width: '100%' }}>
             <Button variant="danger" onClick={(e) => handleDelete(e, key)} style={{ marginRight: '10px' }}>
             Delete
             </Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid}>
+            <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid || isOverlapShift}>
               Save Changes
             </Button>
             </div>
