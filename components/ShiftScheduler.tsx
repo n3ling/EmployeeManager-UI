@@ -65,6 +65,36 @@ function ShiftScheduler() {
 
     setShift(newShift);
     validateShiftTimes(newShift);
+
+        // Validate overlap
+    const { shiftDate, startTime, endTime } = newShift;
+
+    if (shiftDate && startTime && endTime) {
+      const shiftStart = new Date(`${shiftDate}T${startTime}`);
+      const shiftEnd = new Date(`${shiftDate}T${endTime}`);
+
+      const hasOverlap = attendance.some(att => {
+        const otherShift = data.find(s => s.shiftID === att.shiftID);
+
+        // Check if the employee has another shift on the same date that isn't the current shift
+        if (att.empID === selectedEmployee && otherShift && otherShift.shiftID !== shift.shiftID && otherShift.shiftDate === shiftDate) {
+          const otherShiftStart = new Date(`${otherShift.shiftDate}T${otherShift.startTime}`);
+          const otherShiftEnd = new Date(`${otherShift.shiftDate}T${otherShift.endTime}`);
+
+          // Return true if times overlap
+          return (shiftStart < otherShiftEnd && shiftEnd > otherShiftStart);
+        }
+        return false;
+      });
+
+      if (hasOverlap) {
+        setIsOverlap(true);
+        setOverlapMessage("This shift creates a conflict with another shift.");
+      } else {
+        setIsOverlap(false);
+        setOverlapMessage('');
+      }
+    }
   };
 
   // Validate shift times
@@ -99,7 +129,8 @@ function ShiftScheduler() {
     if (findAttendance){
       const employee = employees.find(emp => emp.employeeID === findAttendance.empID);
       if(employee){
-        description = `${employee.employeeID}. ${employee.givenName} ${employee.surname}`;
+        const checkInStatus = findAttendance.checkedIn ? '✓' : '✗';
+        description = `${employee.employeeID}. ${employee.givenName} ${employee.surname} (${checkInStatus})`;
       }
     }
     
@@ -220,6 +251,10 @@ function ShiftScheduler() {
 
     // Get the attendance ID based on the shift ID
     let attendID = findAttendanceIDByShiftID(attendance, event.id); // Use event.id instead of key
+    let attendanceData = null;
+    if (attendID) {
+      attendanceData = attendance.find(att => att.attendanceID === attendID);
+  }
 
     // Update shift and attendance state using attendID directly
     setShift({
@@ -233,11 +268,14 @@ function ShiftScheduler() {
     setAttend(prevAttend => ({
         ...prevAttend,
         attendanceID: attendID, // Use attendID directly
-        shiftID: event.id
+        empID: (attendanceData && attendanceData.empID) || 0,
+        shiftID: event.id,
+        checkedIn: (attendanceData && attendanceData.checkedIn) || false
     }));
+    console.log( attendanceData)
     setKeyAttend(attendID)
     showModalAttend();
-}
+  }
 
   async function handleDelete(e, id){
     e.stopPropagation();
@@ -249,37 +287,38 @@ function ShiftScheduler() {
     }
   };
 
-async function handleAttendSubmit(e){
-  e.preventDefault();
-  console.log(keyAttend)
-  console.log(attend)
-  try {
-      let success;
+  async function handleAttendSubmit(e){
+    e.preventDefault();
+    console.log(keyAttend)
+    console.log(attend)
+    try {
+        let success;
 
-      if (keyAttend) { 
-          success = await updateAttendance(attend);
-          if (success) {
-              console.log("Shift updated successfully");
-          } else {
-              console.error("Failed to update attendance");
-          }
-      } else {
-          success = await addAttendance(attend); 
-          if (success) {
-              console.log("Shift added successfully");
-          } else {
-              console.error("Failed to add attendance");
-          }
-      }
+        if (keyAttend) { 
+            success = await updateAttendance(attend);
+            if (success) {
+                console.log("Shift updated successfully");
+            } else {
+                console.error("Failed to update attendance");
+            }
+        } else {
+            success = await addAttendance(attend); 
+            if (success) {
+                console.log("Shift added successfully");
+            } else {
+                console.error("Failed to add attendance");
+            }
+        }
 
-      if (success) {
-          window.location.reload(); 
-      }
+        if (success) {
+            window.location.reload(); 
+        }
 
-  } catch (error) {
-      console.error("An error occurred while processing the attendance:", error);
+    } catch (error) {
+        console.error("An error occurred while processing the attendance:", error);
+    }
   }
-}
+
   async function handleRemoveAttend(e){
     console.log(typeof(key))
     console.log(attendance)
@@ -308,49 +347,60 @@ async function handleAttendSubmit(e){
   }
 
   const handleEmployeeSelectChange = (e) => {
+    const selectedEmpID = Number(e.target.value);
     setSelectedEmployee(e.target.value);
     setAttend(prevAttend => ({
       ...prevAttend,
-      empID: e.target.value
-    }))
+      empID: selectedEmpID
+    }));
 
-      // Perform overlap check
-  if (shift) {
-    const { shiftDate, startTime, endTime } = shift;
+    // Perform overlap check
+    if (shift) {
+      const { shiftDate, startTime, endTime, shiftID } = shift; // Get the current shiftID
 
-    // Convert times to Date objects for easy comparison
-    const shiftStart = new Date(`${shiftDate}T${startTime}`);
-    const shiftEnd = new Date(`${shiftDate}T${endTime}`);
+      // Convert times to Date objects for easy comparison
+      const shiftStart = new Date(`${shiftDate}T${startTime}`);
+      const shiftEnd = new Date(`${shiftDate}T${endTime}`);
 
-    // Check for overlap
-    const hasOverlap = attendance.some(att => {
-      if (att.empID === Number(e.target.value)) {
-        const otherShift = data.find(s => s.shiftID === att.shiftID);
+      // Check if the selected employee is already assigned to the current shift
+      const isCurrentlyAssigned = attendance.some(att => att.empID === selectedEmpID && att.shiftID === shiftID);
 
-        if (otherShift && otherShift.shiftDate === shiftDate) {
-          const otherShiftStart = new Date(`${otherShift.shiftDate}T${otherShift.startTime}`);
-          const otherShiftEnd = new Date(`${otherShift.shiftDate}T${otherShift.endTime}`);
-
-          // Check if the time intervals overlap
-          return (shiftStart < otherShiftEnd && shiftEnd > otherShiftStart);
-        }
+      // If the employee is currently assigned to this shift, don't check for overlap
+      if (isCurrentlyAssigned) {
+        setIsOverlap(false);
+        setOverlapMessage(''); // Clear the message if they are already assigned
+        return; // Exit early, no overlap check needed
       }
-      return false;
-    });
 
-    if (hasOverlap) {
-      setIsOverlap(true);
-      setOverlapMessage("This shift overlaps with another assigned shift or chosen employee already assigned.");
-    } else {
-      setIsOverlap(false);
-      setOverlapMessage('');
+      // Check for overlap, excluding the current shift
+      const hasOverlap = attendance.some(att => {
+        if (att.empID === selectedEmpID) {
+          const otherShift = data.find(s => s.shiftID === att.shiftID);
+
+          // Only check other shifts that are not the current shift
+          if (otherShift && otherShift.shiftID !== shiftID && otherShift.shiftDate === shiftDate) {
+            const otherShiftStart = new Date(`${otherShift.shiftDate}T${otherShift.startTime}`);
+            const otherShiftEnd = new Date(`${otherShift.shiftDate}T${otherShift.endTime}`);
+
+            // Check if the time intervals overlap
+            return (shiftStart < otherShiftEnd && shiftEnd > otherShiftStart);
+          }
+        }
+        return false;
+      });
+
+      if (hasOverlap) {
+        setIsOverlap(true);
+        setOverlapMessage("This shift overlaps with another assigned shift.");
+      } else {
+        setIsOverlap(false);
+        setOverlapMessage('');
+      }
     }
-  }
-  };
+};
 
   return (
     <>
-
       <Modal show={isModalVisible} onHide={hideModal}>
         <Modal.Header closeButton>
           <Modal.Title>{key == null ? 'Add Shift' : 'Edit Shift'}</Modal.Title>
@@ -410,7 +460,7 @@ async function handleAttendSubmit(e){
           <Button variant="danger" onClick={(e) => handleDelete(e, key)}>
             Delete
           </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid}>
+          <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid || isOverlap}>
             Save Changes
           </Button>
         </Modal.Footer>
@@ -470,6 +520,12 @@ async function handleAttendSubmit(e){
               />
             </Form.Group>
 
+            {/* {isOverlap && (
+              <p style={{ color: 'red', marginTop: '10px' }}>
+                {overlapMessage}
+              </p>
+            )} */}
+
             <div className="d-flex justify-content-end" style={{ width: '100%' }}>
             <Button variant="danger" onClick={(e) => handleDelete(e, key)} style={{ marginRight: '10px' }}>
             Delete
@@ -489,7 +545,7 @@ async function handleAttendSubmit(e){
             <div style={{ display: 'flex', alignItems: 'center' }}>
               <Form.Control 
                 as="select" 
-                value={selectedEmployee || ""} // Set the assigned employee as default, or "Select Employee" if none
+                value={attend.empID || ""} // Set the assigned employee as default, or "Select Employee" if none
                 onChange={handleEmployeeSelectChange}
                 required
                 style={{ flex: 1, marginRight: '10px' }} // Ensure the dropdown takes full width and has space for buttons
@@ -521,6 +577,19 @@ async function handleAttendSubmit(e){
                 Remove
               </Button>
             </div>
+
+            {/* Checkbox for CheckedIn */}
+            <Form.Group controlId="checkedIn" style={{ marginTop: '15px' }}>
+              <Form.Check 
+                type="checkbox" 
+                label="Checked In"
+                checked={attend.checkedIn || false} 
+                onChange={(e) => setAttend(prevAttend => ({
+                  ...prevAttend,
+                  checkedIn: e.target.checked ? true : false
+                }))}
+              />
+            </Form.Group>
 
             {/* Overlap Message */}
             {isOverlap && (
