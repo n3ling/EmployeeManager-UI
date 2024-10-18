@@ -340,7 +340,7 @@ async function handleAttendSubmit(e){
 
     if (hasOverlap) {
       setIsOverlap(true);
-      setOverlapMessage("This shift overlaps with another assigned shift.");
+      setOverlapMessage("This shift overlaps with another assigned shift or chosen employee already assigned.");
     } else {
       setIsOverlap(false);
       setOverlapMessage('');
@@ -469,7 +469,16 @@ async function handleAttendSubmit(e){
                 onChange={handleInputChange} 
               />
             </Form.Group>
-          </Form>
+
+            <div className="d-flex justify-content-end" style={{ width: '100%' }}>
+            <Button variant="danger" onClick={(e) => handleDelete(e, key)} style={{ marginRight: '10px' }}>
+            Delete
+            </Button>
+            <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid}>
+              Save Changes
+            </Button>
+            </div>
+            </Form>
 
           <hr/>
 
@@ -527,12 +536,6 @@ async function handleAttendSubmit(e){
 
 
         <Modal.Footer>
-          <Button variant="danger" onClick={(e) => handleDelete(e, key)}>
-            Delete
-          </Button>
-          <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid}>
-            Save Changes
-          </Button>
         </Modal.Footer>
 
       </Modal>
