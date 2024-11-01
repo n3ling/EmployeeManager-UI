@@ -4,7 +4,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { Form } from 'react-bootstrap';
 import { addShift, updateShift, deleteShift } from '@/lib/shiftData';
-import { addAttendance, updateAttendance, deleteAttendance } from '@/lib/attendanceData';
+import { addAttendance, updateAttendance, deleteAttendance, updateCheckIn } from '@/lib/attendanceData';
 import React from 'react';
 
 function ShiftScheduler() {
@@ -288,26 +288,49 @@ function ShiftScheduler() {
     }
   };
 
-  async function handleAttendSubmit(e){
+  async function handleAttendSubmit(e) {
     e.preventDefault();
-    console.log(keyAttend)
-    console.log(attend)
+    console.log(keyAttend);
+    console.log(attend);
+
     try {
         let success;
 
-        if (keyAttend) { 
-            success = await updateAttendance(attend);
+        // Assuming `getExistingAttendance()` is a function that fetches the existing attendance object by keyAttend
+        const existingAttend = attend
+
+        // Compare the `attend` object with the `existingAttend` object, except for `checkedIn`
+        const isSameExceptCheckedIn = Object.keys(attend).every(key => {
+            if (key === 'checkedIn') {
+                return true; // Skip `checkedIn`
+            }
+            return attend[key] === existingAttend[key];
+        });
+
+        if (isSameExceptCheckedIn) {
+            // If only `checkedIn` is different, call updateCheckedIn
+            success = await updateCheckIn(attend); // Pass relevant data
             if (success) {
-                console.log("Shift updated successfully");
+                console.log("CheckedIn status updated successfully");
             } else {
-                console.error("Failed to update attendance");
+                console.error("Failed to update CheckedIn status");
             }
         } else {
-            success = await addAttendance(attend); 
-            if (success) {
-                console.log("Shift added successfully");
+            // Proceed with regular attendance update or add logic
+            if (keyAttend) { 
+                success = await updateAttendance(attend);
+                if (success) {
+                    console.log("Attendance updated successfully");
+                } else {
+                    console.error("Failed to update attendance");
+                }
             } else {
-                console.error("Failed to add attendance");
+                success = await addAttendance(attend); 
+                if (success) {
+                    console.log("Attendance added successfully");
+                } else {
+                    console.error("Failed to add attendance");
+                }
             }
         }
 
@@ -318,7 +341,7 @@ function ShiftScheduler() {
     } catch (error) {
         console.error("An error occurred while processing the attendance:", error);
     }
-  }
+}
 
   async function handleRemoveAttend(e){
     console.log(typeof(key))
@@ -480,6 +503,7 @@ function ShiftScheduler() {
                 value={shift.shiftDate}
                 readOnly
                 required 
+                disabled={attend.empID !== 0}
               />
             </Form.Group>
             <Form.Group controlId="startTime">
@@ -490,6 +514,7 @@ function ShiftScheduler() {
                 onChange={handleInputChange}
                 isInvalid={!!errors.startTime} 
                 required 
+                disabled={attend.empID !== 0}
               />
               {errors.startTime && (
                 <Form.Control.Feedback type="invalid">
@@ -505,6 +530,7 @@ function ShiftScheduler() {
                 onChange={handleInputChange}
                 isInvalid={!!errors.endTime} 
                 required 
+                disabled={attend.empID !== 0}
               />
               {errors.endTime && (
                 <Form.Control.Feedback type="invalid">
@@ -518,6 +544,7 @@ function ShiftScheduler() {
                 label="Is Holiday?" 
                 checked={shift.isHoliday}
                 onChange={handleInputChange} 
+                disabled={attend.empID !== 0}
               />
             </Form.Group>
 
@@ -530,10 +557,10 @@ function ShiftScheduler() {
 
 
             <div className="d-flex justify-content-end" style={{ width: '100%' }}>
-            <Button variant="danger" onClick={(e) => handleDelete(e, key)} style={{ marginRight: '10px' }}>
+            <Button variant="danger" onClick={(e) => handleDelete(e, key)} style={{ marginRight: '10px' }} disabled={attend.empID !== 0}>
             Delete
             </Button>
-            <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid || isOverlapShift}>
+            <Button variant="primary" onClick={handleSubmit} disabled={!isFormValid || isOverlapShift || attend.empID !== 0}>
               Save Changes
             </Button>
             </div>
