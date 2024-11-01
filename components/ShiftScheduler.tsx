@@ -306,8 +306,10 @@ function ShiftScheduler() {
             }
             return attend[key] === existingAttend[key];
         });
-
-        if (isSameExceptCheckedIn) {
+        console.log(isSameExceptCheckedIn)
+        console.log(existingAttend)
+        console.log(attend)
+        if (isSameExceptCheckedIn && existingAttend.empID !== 0 && attend.attendanceID !== null) {
             // If only `checkedIn` is different, call updateCheckedIn
             success = await updateCheckIn(attend); // Pass relevant data
             if (success) {
