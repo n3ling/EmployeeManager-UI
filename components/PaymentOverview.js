@@ -89,10 +89,10 @@ export default function PaymentOverview() {
         </label>
       </div>
 
-      <h1>Payment Overview</h1>
+
       {/* Earnings Overview Section */}
       <section>
-        <h2>Earnings Overview</h2>
+        <h2>Payment Overview</h2>
         {loadingEarnings ? (
           <p>Loading earnings...</p>
         ) : earningsError ? (
