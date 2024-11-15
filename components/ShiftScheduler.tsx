@@ -30,7 +30,8 @@ function ShiftScheduler() {
     attendanceID: 0, 
     shiftID: 0,
     empID: 0,
-    checkedIn: false
+    checkedIn: false,
+    isPaid: false
   });
   const [selectedEmployee, setSelectedEmployee] = useState(attendance.empID || "");
   const [isOverlap, setIsOverlap] = useState(false);
@@ -271,7 +272,8 @@ function ShiftScheduler() {
         attendanceID: attendID, // Use attendID directly
         empID: (attendanceData && attendanceData.empID) || 0,
         shiftID: event.id,
-        checkedIn: (attendanceData && attendanceData.checkedIn) || false
+        checkedIn: (attendanceData && attendanceData.checkedIn) || false,
+        isPaid: (attendanceData && attendanceData.isPaid) || false
     }));
     console.log( attendanceData)
     setKeyAttend(attendID)
@@ -619,6 +621,19 @@ function ShiftScheduler() {
                 onChange={(e) => setAttend(prevAttend => ({
                   ...prevAttend,
                   checkedIn: e.target.checked ? true : false
+                }))}
+              />
+            </Form.Group>
+
+            {/* Checkbox for isPaid */}
+            <Form.Group controlId="checkedIn" style={{ marginTop: '15px' }}>
+              <Form.Check 
+                type="checkbox" 
+                label="Is Paid?"
+                checked={attend.isPaid || false} 
+                onChange={(e) => setAttend(prevAttend => ({
+                  ...prevAttend,
+                  isPaid: e.target.checked ? true : false
                 }))}
               />
             </Form.Group>

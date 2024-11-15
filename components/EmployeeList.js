@@ -32,6 +32,7 @@ export default function EmployeeList(){
       status: 'Active',
       department: '',
       hireDate: '',
+      payRate: 0.0
     });
     const [selectedEmployee, setSelectedEmployee] = useState({
       employeeID: '',
@@ -49,6 +50,7 @@ export default function EmployeeList(){
       status: 'Active',
       department: '',
       hireDate: '',
+      payRate: 0.0
     });
     const [selectedEmployeeCopy, setSelectedEmployeeCopy] = useState({
       employeeID: '',
@@ -66,6 +68,7 @@ export default function EmployeeList(){
       status: 'Active',
       department: '',
       hireDate: '',
+      payRate: 0.0
     });
 
     function checkDuplicateEmails(email){
@@ -419,6 +422,24 @@ export default function EmployeeList(){
 
               <div className="row">
                 <div className="col-sm-12">
+                  <Form.Group controlId="formPayRate" style={{ marginBottom: '15px' }}>
+                    <Form.Label>Wage</Form.Label>
+                    <Form.Control
+                      type="number"
+                      placeholder="Enter wage"
+                      name="payRate"
+                      min="0"
+                      step="0.01"
+                      value={employee.payRate}
+                      onChange={handleChange}
+                      required
+                    />
+                  </Form.Group>
+                </div>
+              </div>
+
+              <div className="row">
+                <div className="col-sm-12">
                   <Button variant="primary" type="submit" style={{ marginTop: '10px' }}>
                     Submit
                   </Button>
@@ -673,6 +694,24 @@ export default function EmployeeList(){
                     </Form.Group>
                   </div>
                 </div>
+
+                <div className="row">
+                <div className="col-sm-12">
+                  <Form.Group controlId="formPayRate" style={{ marginBottom: '15px' }}>
+                    <Form.Label>Wage</Form.Label>
+                    <Form.Control
+                      type="number"
+                      placeholder="Enter wage"
+                      name="payRate"
+                      min="0"
+                      step="0.01"
+                      value={employee.payRate}
+                      onChange={handleChangeUpdate}
+                      required
+                    />
+                  </Form.Group>
+                </div>
+              </div>
 
                 <div className="row">
                   <div className="col-sm-12">
