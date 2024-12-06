@@ -25,7 +25,9 @@ export default function PaymentDetail() {
     if (id) {
       const fetchEmployeeData = async () => {
         try {
-          const response = await fetch('https://employeemanager-y5z4.onrender.com/employees');
+          const response = await fetch('https://employeemanager-y5z4.onrender.com/employees', {
+            credentials: 'include'
+          });
           if (!response.ok) {
             throw new Error('Failed to fetch employees.');
           }

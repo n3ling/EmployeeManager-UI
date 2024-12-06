@@ -6,8 +6,11 @@ import { Form } from 'react-bootstrap';
 import { addShift, updateShift, deleteShift } from '@/lib/shiftData';
 import { addAttendance, updateAttendance, deleteAttendance, updateCheckIn } from '@/lib/attendanceData';
 import React from 'react';
+import { useRouter } from 'next/router';
 
 function ShiftScheduler() {
+  const router = useRouter();
+
   const [data, setData] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [attendance, setAttendance] = useState([]);
@@ -38,6 +41,7 @@ function ShiftScheduler() {
   const [overlapMessage, setOverlapMessage] = useState('');
   const [overlapEditShiftMessage, setOverlapEditShiftMessage] = useState('');
   const [isOverlapShift, setIsOverlapShift] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(true);
 
   const formatDate = (date) => {
     const d = new Date(date);
@@ -157,33 +161,46 @@ function ShiftScheduler() {
       return shift.shiftID > maxID ? shift.shiftID : maxID;
     }, 0);
   }
-
-  const fetchData = (url, setState, options = {}) => {
-    fetch(url, {
-      ...options,
-      credentials: 'include', // Ensure credentials are always included
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to fetch data from ${url}, status: ${res.status}`);
+  const fetchData = async (url, setState, setAuth, options = {}) => {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        credentials: 'include', // Ensure credentials are always included
+      });
+  
+      if (!response.ok) {
+        if (response.status === 401) {
+          setAuth(false); // Mark as unauthorized
+          router.push('/unauthorized'); // Redirect if unauthorized
+          return; // Stop further execution
         }
-        return res.json();
-      })
-      .then((data) => setState(data))
-      .catch((err) => console.error(`Error fetching data from ${url}:`, err));
+        throw new Error(`Failed to fetch data from ${url}, status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      setState(data);
+    } catch (err) {
+      console.error(`Error fetching data from ${url}:`, err);
+    }
   };
   
   useEffect(() => {
-    fetchData('https://employeemanager-y5z4.onrender.com/shift', setData);
-  }, []);
-  
+    if (isAuthorized) {
+      fetchData('https://employeemanager-y5z4.onrender.com/shift', setData, setIsAuthorized);
+    }
+  }, [isAuthorized]);
+
   useEffect(() => {
-    fetchData('https://employeemanager-y5z4.onrender.com/employees', setEmployees);
-  }, []);
-  
+    if (isAuthorized) {
+      fetchData('https://employeemanager-y5z4.onrender.com/employees', setEmployees, setIsAuthorized);
+    }
+  }, [isAuthorized]);
+
   useEffect(() => {
-    fetchData('https://employeemanager-y5z4.onrender.com/attendance', setAttendance);
-  }, []);
+    if (isAuthorized) {
+      fetchData('https://employeemanager-y5z4.onrender.com/attendance', setAttendance, setIsAuthorized);
+    }
+  }, [isAuthorized]);
   
   useEffect(() => {
     if (data.length > 0) {

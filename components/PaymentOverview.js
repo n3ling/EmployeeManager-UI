@@ -28,6 +28,10 @@ export default function PaymentOverview() {
           credentials: 'include'
         });
         if (!response.ok) {
+          if (response.status === 401) {
+            router.push('/unauthorized'); // Redirect if unauthorized
+            return; // Stop further execution
+          }
           throw new Error('Failed to fetch employees.');
         }
         const data = await response.json();
@@ -54,8 +58,13 @@ export default function PaymentOverview() {
         });
 
         if (!response.ok) {
+          if (response.status === 401) {
+            router.push('/unauthorized'); // Redirect if unauthorized
+            return; // Stop further execution
+          }
           throw new Error('Failed to fetch earnings summary.');
         }
+
         const data = await response.json();
         setEarningsData(data);
       } catch (err) {
