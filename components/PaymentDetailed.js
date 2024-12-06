@@ -59,6 +59,7 @@ export default function PaymentDetail() {
 
           const response = await fetch('https://employeemanager-y5z4.onrender.com/earnings/single', {
             method: 'POST',
+            credentials: "include",
             headers: {
               'Content-Type': 'application/json'
             },

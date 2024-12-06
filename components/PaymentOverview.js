@@ -24,7 +24,9 @@ export default function PaymentOverview() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch('https://employeemanager-y5z4.onrender.com/employees');
+        const response = await fetch('https://employeemanager-y5z4.onrender.com/employees',{
+          credentials: 'include'
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch employees.');
         }
@@ -46,6 +48,7 @@ export default function PaymentOverview() {
       try {
         const response = await fetch('https://employeemanager-y5z4.onrender.com/earnings/all', {
           method: 'POST',
+          credentials: "include",
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ startDate, endDate })
         });
