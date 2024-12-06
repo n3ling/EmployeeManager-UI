@@ -7,47 +7,12 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
 export default function Hello() {
-  const [empData, setEmptData] = useState();
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    fetch(`/employees`)
-      .then(res => res.json())
-      .then(data => {
-        setEmptData(data[0]);
-      });
-  }, []);
-
-  
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);  
-  
   return (
       <>
       <Container>
           <div style={{ marginTop: '20px', marginBottom: '20px' }}>
               <h1>Welcome!</h1>
           </div>
-          <Button variant="primary" onClick={handleShow}>View</Button>
-
-      <Modal show={show} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>Modal heading</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-        <p>ID: {empData?.employeeID}</p>
-        <p>First Name: {empData?.givenName}</p>
-        <p>Email: {empData?.email}</p>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleClose}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
-      </Modal>
       </Container>
       </>
     );

@@ -158,11 +158,19 @@ function ShiftScheduler() {
     }, 0);
   }
 
-  const fetchData = (url, setState) => {
-    fetch(url)
-      .then(res => res.json())
-      .then(data => setState(data))
-      .catch(err => console.error(`Error fetching data from ${url}:`, err));
+  const fetchData = (url, setState, options = {}) => {
+    fetch(url, {
+      ...options,
+      credentials: 'include', // Ensure credentials are always included
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch data from ${url}, status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => setState(data))
+      .catch((err) => console.error(`Error fetching data from ${url}:`, err));
   };
   
   useEffect(() => {
